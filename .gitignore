@@ -2,3 +2,6 @@
 .env
 #ignore pycache
 **/__pycache__/
+#ignore keys
+Retico_GPT/
+KEY/
