@@ -1,18 +1,30 @@
-# author:nerako, David, Nedas
+# author:nerako, David, Nedas, Gregor
 # For the main screen and UI, run this function directly.
-# -----------------------2024.03.05-------------------------
+# -----------------------2024.03.14-------------------------
 
 import eel
 import record_wav
 import microphone_ASR
+import multiprocessing
+import keyboard
+import pyttsx3
+import TTS_Module as tm
+import threading
 import wav_ASR
 import TTS
 from restaurant_manager import RestaurantManager
 import time
 
 eel.init('web')
-speaker = TTS.TTS()
 rm = RestaurantManager()
+
+def sayFunclol(phrase):
+    print('witchcraft...')
+    speaker.setProperty('rate', 160)
+    speaker.say(phrase)
+    speaker.runAndWait()
+    speaker.stop()
+
 
 # initiate a clarification request from GPT for the relevant slot.
 def clar_request(slot):
@@ -39,10 +51,19 @@ def clar_request(slot):
 def append_to_chattext():
     # update chat text with GPT and user responses
     # GPT repsonse:
-    msg = 'Can I help you book a restaurant?'
+    msg = 'Can I help you book a restaurant? The fitness grand-pacer test is a multistage arobic test, that progressively gets more difficult as you continue.'
     eel.updatechattext("ChatGPT: " + msg)
     #set up new thread,
-    speaker.speak(msg)
+    if __name__ == "__main__":
+        p = multiprocessing.Process(target=sayFunclol, args=(msg,))
+        p.start()
+        while p.is_alive():
+            if keyboard.is_pressed('q'):
+                p.terminate()
+            else:
+                continue
+        p.join()
+    #speaker.sayFunc(msg)
     #if mic hears something, kill the process, and listen.
     #^^ has to be in muylti thread for the interrupt.
     #volume and amonut of time.
