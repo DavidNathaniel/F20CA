@@ -14,6 +14,7 @@ import wav_ASR
 import TTS
 from restaurant_manager import RestaurantManager
 import time
+import TTS_Module as tts_mod
 
 eel.init('web')
 rm = RestaurantManager()
@@ -31,7 +32,7 @@ def clar_request(slot):
     #send request to GPT, then update the chat text and speak the response
     ans = rm.sendClarification(slot) #
     eel.updatechattext(ans) 
-    speaker.speak(ans)
+    tts_mod.speak(ans)
 
     # get the user's response, send to GPT, convert the gpt response to our python dict.
     start_time = time.time()
@@ -39,8 +40,8 @@ def clar_request(slot):
     end_time = time.time()
     print(f"ASR took {end_time - start_time} seconds")
     gpt_output = rm.sendSlotPrompt(mic_input)
-    gpt_dict = rm.convert_stringtodict(gpt_output)
     print(gpt_output)
+    gpt_dict = rm.convert_stringtodict(gpt_output)
 
     #update the slots with the new information
     rm.updateSlots(gpt_dict)
@@ -49,20 +50,24 @@ def clar_request(slot):
 
 @eel.expose
 def append_to_chattext():
+    engine = tts_mod.create_tts_engine()
     # update chat text with GPT and user responses
     # GPT repsonse:
     msg = 'Can I help you book a restaurant? The fitness grand-pacer test is a multistage arobic test, that progressively gets more difficult as you continue.'
     eel.updatechattext("ChatGPT: " + msg)
     #set up new thread,
-    if __name__ == "__main__":
-        p = multiprocessing.Process(target=sayFunclol, args=(msg,))
-        p.start()
-        while p.is_alive():
-            if keyboard.is_pressed('q'):
-                p.terminate()
-            else:
-                continue
-        p.join()
+    p = multiprocessing.Process(target=tts_mod.say_words, args=(engine, msg,))
+
+# This section will run all global variables and functions again, including the eel.start function. Hence a new window is created
+    # if __name__ == "__main__":
+    #     p = multiprocessing.Process(target=tts_mod.speak, args=(msg,))
+    #     p.start()
+    #     while p.is_alive():
+    #         if keyboard.is_pressed('q'):
+    #             p.terminate()
+    #         else:
+    #             continue
+    #     p.join()
     #speaker.sayFunc(msg)
     #if mic hears something, kill the process, and listen.
     #^^ has to be in muylti thread for the interrupt.
@@ -102,7 +107,7 @@ def append_to_chattext():
             slot_request =  rm.askForSlot(currKey)
             eel.updatechattext("ChatGPT: "+slot_request)
             start_speaker_time = time.time()
-            speaker.speak(slot_request)
+            tts_mod.speak(slot_request)
 
             #listen for user utterance, then send to GPT
             start_mic_time = time.time()
@@ -147,7 +152,7 @@ def append_to_chattext():
 
     ans = "Convo Finished" # all slots have been found, termiate conversation.
     eel.updatechattext(ans)
-    speaker.speak(ans)
+    tts_mod.speak(ans)
     
     #this resets the conversation once it is finished. 
     #Alternative is to rest when user presses speak button
@@ -158,4 +163,7 @@ def append_to_chattext():
 # def update_speaktext(ans):
 #     eel.updatespeaktext(ans)
 
+# @eel.expose
+# def start_app():
+#     eel.start('index.html', size=(1100, 950))
 eel.start('index.html', size=(1100, 950))

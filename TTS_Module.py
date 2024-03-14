@@ -8,14 +8,14 @@ import keyboard
 
 
 
-def __init__():
+def create_tts_engine():
     engine = pyttsx3.init()
     # base set
-    rate = engine.getProperty('rate')
-    engine.setProperty('rate', 150)
+    # rate = engine.getProperty('rate')
+    # engine.setProperty('rate', 150)
 
-    volume = engine.getProperty('volume')
-    engine.setProperty('volume', 1.0)
+    # volume = engine.getProperty('volume')
+    # engine.setProperty('volume', 1.0)
 
     voices = engine.getProperty('voices')
     engine.setProperty('voice', voices[1].id)
@@ -23,20 +23,12 @@ def __init__():
     return engine
 
 def speak(engine, text):
-    a = engine.say(text)
+    engine.say(text)
     engine.runAndWait()
-    engine.stop()
-
-def sayFunc(engine, phrase):
-    #engine = pyttsx3.init()
-    #self.engine.setProperty('rate', 160)
-    engine.say(phrase)
-    engine.runAndWait()
+    # engine.stop()
 
 def say_words(engine, phrase):
-    #if __name__ == "__main__":
-    print('did it work?')
-    p = multiprocessing.Process(target=sayFunc, args=(phrase,))
+    p = multiprocessing.Process(target=speak, args=(engine, phrase,))
     p.start()
     while p.is_alive():
         print('while activated')
