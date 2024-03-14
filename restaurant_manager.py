@@ -19,14 +19,20 @@ class RestaurantManager(DM):
             "Cuisine": None
         }
     
-    
+    #empty the slots
+    def empty_slots(self):
+        self.restaurant_slots = {
+            "Location": None,
+            "Timeframe": None,
+            "PartySize": None,
+            "Cuisine": None
+        }
+
     def check_empty_slots(self):
         start_time = time.time()
         NoneList = []
         for slot in self.restaurant_slots.keys():
-            if self.restaurant_slots[slot] is None:
-                NoneList.append(slot)
-            elif self.restaurant_slots[slot] == 'hhmm':
+            if self.restaurant_slots[slot] in [None, 'None', 'hhmm']:
                 NoneList.append(slot)
         end_time = time.time()
         time_difference = end_time - start_time

@@ -127,6 +127,11 @@ def append_to_chattext():
     ans = "Convo Finished" # all slots have been found, termiate conversation.
     eel.updatechattext(ans)
     speaker.speak(ans)
+    
+    #this resets the conversation once it is finished. 
+    #Alternative is to rest when user presses speak button
+    rm.empty_slots()# = RestaurantManager()
+
 
 # @eel.expose
 # def update_speaktext(ans):
