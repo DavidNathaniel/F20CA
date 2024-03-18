@@ -18,6 +18,7 @@ import TTS_Module as tts_mod
 
 eel.init('web')
 rm = RestaurantManager()
+engine = tts_mod.create_tts_engine()
 
 def sayFunclol(phrase):
     print('witchcraft...')
@@ -48,17 +49,35 @@ def clar_request(slot):
     print("Slots are: ", rm.restaurant_slots)
     print("response is: ", gpt_output)
 
+def activate(text, createEngine=False):
+    #engine = tts_mod.create_tts_engine()
+    speak(text)
+
+def speak(text):
+    engine.say(text)
+    engine.runAndWait()
+
 @eel.expose
 def append_to_chattext():
-    engine = tts_mod.create_tts_engine()
+    
+    # engine.stop()
+    
     # update chat text with GPT and user responses
     # GPT repsonse:
     msg = 'Can I help you book a restaurant? The fitness grand-pacer test is a multistage arobic test, that progressively gets more difficult as you continue.'
     eel.updatechattext("ChatGPT: " + msg)
     #set up new thread,
-    p = multiprocessing.Process(target=tts_mod.say_words, args=(engine, msg,))
-
-# This section will run all global variables and functions again, including the eel.start function. Hence a new window is created
+    p = multiprocessing.Process(target=activate, args=( msg,))
+    
+    p.start()
+    while p.is_alive():
+        print('while activated')
+        if keyboard.is_pressed('q'):
+            p.terminate()
+        else:
+            continue
+    p.join()
+    # This section will run all global variables and functions again, including the eel.start function. Hence a new window is created
     # if __name__ == "__main__":
     #     p = multiprocessing.Process(target=tts_mod.speak, args=(msg,))
     #     p.start()
@@ -166,4 +185,5 @@ def append_to_chattext():
 # @eel.expose
 # def start_app():
 #     eel.start('index.html', size=(1100, 950))
-eel.start('index.html', size=(1100, 950))
+if __name__ == "__main__":
+    eel.start('index.html', size=(1100, 950))
