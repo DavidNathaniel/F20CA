@@ -49,10 +49,11 @@ def clar_request(slot):
     print("Slots are: ", rm.restaurant_slots)
     print("response is: ", gpt_output)
 
-def activate(text, createEngine=False):
+    #def activate(text, createEngine=False):
     #engine = tts_mod.create_tts_engine()
-    speak(text)
+    #speak(text)
 
+# TTS speaker function (fo multi-threading)
 def speak(text):
     engine.say(text)
     engine.runAndWait()
@@ -67,14 +68,19 @@ def append_to_chattext():
     msg = 'Can I help you book a restaurant? The fitness grand-pacer test is a multistage arobic test, that progressively gets more difficult as you continue.'
     eel.updatechattext("ChatGPT: " + msg)
     #set up new thread,
-    p = multiprocessing.Process(target=activate, args=( msg,))
+    p = multiprocessing.Process(target=speak, args=( msg,))
     
     p.start()
     while p.is_alive():
-        print('while activated')
+        #print('while activated')
+        #instead: if the person speaks (not if they press'q')
         if keyboard.is_pressed('q'):
+            #kill the proces (interrupt)
             p.terminate()
+            #UI. destroy should go here?
+            # ...
         else:
+            #listen for user input (?)
             continue
     p.join()
     # This section will run all global variables and functions again, including the eel.start function. Hence a new window is created
