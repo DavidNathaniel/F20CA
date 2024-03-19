@@ -35,7 +35,8 @@ httpx
 distro
 ```
 
-
+##### Step 4:
+API keys (ASR, GPT etc.) are held within a ReticoGPT folder inside k.env file. This can be provided upon request, however most of the information is availble on our Teams page.
 
 # Start
 
