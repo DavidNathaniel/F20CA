@@ -120,6 +120,8 @@ def sentence_to_text(responses):
 
         transcript = result.alternatives[0].transcript
         init.update_speaktext(transcript)
+        yield transcript
+        #print(f'transcript is {transcript}')
         # time.sleep(0.1)
         """
         CODE FOR EVALUATION
@@ -200,6 +202,8 @@ def set_up():
         )
 
         responses = client.streaming_recognize(streaming_config, requests)
+        #print(f'resposne: {responses}')
+        
         sentence = sentence_to_text(responses)
         return sentence
         # ex.update_text(sentence)
