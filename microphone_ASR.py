@@ -120,7 +120,7 @@ def sentence_to_text(responses):
 
         transcript = result.alternatives[0].transcript
         init.update_speaktext(transcript)
-        yield transcript
+        #yield transcript
         #print(f'transcript is {transcript}')
         # time.sleep(0.1)
         """
