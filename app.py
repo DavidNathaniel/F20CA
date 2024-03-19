@@ -20,6 +20,9 @@ eel.init('web')
 rm = RestaurantManager()
 engine = tts_mod.create_tts_engine()
 
+global flag_tts
+flag_tts = False
+
 def sayFunclol(phrase):
     print('witchcraft...')
     speaker.setProperty('rate', 160)
@@ -53,28 +56,34 @@ def clar_request(slot):
     #engine = tts_mod.create_tts_engine()
     #speak(text)
 
-# TTS speaker function (fo multi-threading)
-def speak(text):
-    engine.say(text)
-    engine.runAndWait()
+def thread_killer(sendKillRequest=False):
+    return sendKillRequest
 
-@eel.expose
-def append_to_chattext():
-    
-    # engine.stop()
-    
-    # update chat text with GPT and user responses
-    # GPT repsonse:
-    msg = 'Can I help you book a restaurant? The fitness grand-pacer test is a multistage arobic test, that progressively gets more difficult as you continue.'
-    eel.updatechattext("ChatGPT: " + msg)
-    #set up new thread,
-    p = multiprocessing.Process(target=speak, args=( msg,))
-    
+# Function to handle microphone input
+def microphone_thread():
+    while True:
+        # Listen for microphone input
+        mic_input = microphone_ASR.set_up()
+        # Check if there is speech input, if so, interrupt the speaker
+        if mic_input:
+            '''    # User response:
+            mic_input = microphone_ASR.set_up()
+            ans =  "Speaker: " + mic_input
+            eel.updatechattext(ans)'''
+            # Terminate the speaker process
+            #p.terminate()
+            # Update the chat text with user input
+            eel.updatechattext("Speaker: " + mic_input)
+
+# If user is speaking before the tts is speaking, then tts will not say anything (?)
+def setup_speak_process(p, msg):
+    #p = multiprocessing.Process(target=speak, args=( msg,))
+    #flag_tts = False
     p.start()
     while p.is_alive():
         #print('while activated')
         #instead: if the person speaks (not if they press'q')
-        if keyboard.is_pressed('q'):
+        if flag_tts: #keyboard.is_pressed('q'): #mic_input:
             #kill the proces (interrupt)
             p.terminate()
             #UI. destroy should go here?
@@ -83,34 +92,66 @@ def append_to_chattext():
             #listen for user input (?)
             continue
     p.join()
-    # This section will run all global variables and functions again, including the eel.start function. Hence a new window is created
-    # if __name__ == "__main__":
-    #     p = multiprocessing.Process(target=tts_mod.speak, args=(msg,))
-    #     p.start()
-    #     while p.is_alive():
-    #         if keyboard.is_pressed('q'):
-    #             p.terminate()
-    #         else:
-    #             continue
-    #     p.join()
-    #speaker.sayFunc(msg)
-    #if mic hears something, kill the process, and listen.
-    #^^ has to be in muylti thread for the interrupt.
-    #volume and amonut of time.
 
-    #turn off the microphone after the utternace has been sent to gpt, 
-    # but turn it back on before the tts to allow for interrupts
-    #also need to chekc the itimings of our system - how long does each aspect take? 
-    # gpt, asr, microphone on/off, how long are each of these.
+# TTS speaker function (for multi-threading)
+def speak(text):
+    engine.say(text)
+    engine.runAndWait()
+
+def mic_setup():
+    global flag_tts
+    mic_input = microphone_ASR.set_up()
+    while not mic_input:
+        continue
+    else:
+        flag_tts = True
+    #return mic_input
+
+@eel.expose
+def append_to_chattext():
+    #mic_input = microphone_ASR.set_up()
+
+    m = multiprocessing.Process(target=mic_setup)
+    m.start()
 
 
+    # engine.stop()
+    
+    # update chat text with GPT and user responses
+    # GPT repsonse:
+    msg = 'Can I help you book a restaurant? The fitness grand-pacer test is a multistage arobic test, that progressively gets more difficult as you continue.'
+    eel.updatechattext("ChatGPT: " + msg)
+    #set up new thread,
+    '''p = multiprocessing.Process(target=speak, args=( msg,))
+    #m = multiprocessing.Process(target=, args=( msg,))
+
+    p.start()
+    while p.is_alive():
+        #print('while activated')
+        #instead: if the person speaks (not if they press'q')
+        if keyboard.is_pressed('q'): #mic_input:
+            #kill the proces (interrupt)
+            p.terminate()
+            #UI. destroy should go here?
+            # ...
+        else:
+            #listen for user input (?)
+            continue
+    p.join()
+    '''
+    
+    p = multiprocessing.Process(target=speak, args=( msg))
+    flag_tts = False
+    setup_speak_process(p, msg)
+
+    #m = multiprocessing.Process(target=, args=( msg,))
     #gpt has overwritten the keys in the dict.
     #
     #
     # User response:
-    mic_input = microphone_ASR.set_up()
-    ans =  "Speaker: " + mic_input
-    eel.updatechattext(ans)
+    #mic_input = microphone_ASR.set_up()
+    #ans =  "Speaker: " + mic_input
+    #eel.updatechattext(ans)
     
     #Send uterance to GPT, convert the response to our python dict, and update
     gpt_output = rm.sendSlotPrompt(mic_input)
@@ -132,7 +173,11 @@ def append_to_chattext():
             slot_request =  rm.askForSlot(currKey)
             eel.updatechattext("ChatGPT: "+slot_request)
             start_speaker_time = time.time()
-            tts_mod.speak(slot_request)
+            
+            #tts_mod.speak(slot_request)
+            #will need to set up a new process.
+            setup_speak_process(msg)
+            
 
             #listen for user utterance, then send to GPT
             start_mic_time = time.time()
@@ -182,7 +227,10 @@ def append_to_chattext():
     #this resets the conversation once it is finished. 
     #Alternative is to rest when user presses speak button
     rm.empty_slots()# = RestaurantManager()
-
+    
+    #just in case
+    m.join()
+    #
 
 # @eel.expose
 # def update_speaktext(ans):
