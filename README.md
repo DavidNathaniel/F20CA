@@ -38,8 +38,12 @@ distro
 ##### Step 4:
 API keys (ASR, GPT etc.) are held within a ReticoGPT folder inside k.env file. This can be provided upon request, however most of the information is availble on our Teams page.
 
+##### Info: GIT Branch commands to fetch and switch:
+`git fetch <remote_name> <branch_name>`
+`git branch <branch_name> FETCH_HEAD`
+`git checkout <branch_name>`
+
 # Start
 
 run app.py
 
-Adding - Gregor
