@@ -119,8 +119,8 @@ def sentence_to_text(responses):
             continue
 
         transcript = result.alternatives[0].transcript
-        init.update_speaktext(transcript)
-        yield transcript
+        # init.update_speaktext(transcript)
+        # yield transcript
         #print(f'transcript is {transcript}')
         # time.sleep(0.1)
         """
@@ -206,5 +206,6 @@ def set_up():
         
         sentence = sentence_to_text(responses)
         return sentence
+    
         # ex.update_text(sentence)
         # ex.Stop()
