@@ -72,11 +72,11 @@ def clar_request(slot):
     print("GPT's response is: ", gpt_output)
     gpt_dict = rm.convert_stringtodict(gpt_output)
 
-    print("Current slots are: ", rm.restaurant_slots)
+    print("Current slots are: ", rm.slots)
 
     #update the slots with the new information
     rm.updateSlots(gpt_dict)
-    print("Updated slots are: ", rm.restaurant_slots)
+    print("Updated slots are: ", rm.slots)
 
 
 # Function to handle microphone input
@@ -171,10 +171,10 @@ def find_info():
         gpt_output = rm.sendSlotPrompt(curr_Utt)
         print(f'New GPT Response after ValueError:\n{gpt_output}\n')
         gpt_dict = rm.convert_stringtodict(gpt_output) #retry...
-        print("Slots after error: ", rm.restaurant_slots)
+        print("Slots after error: ", rm.slots)
         #clar_request(currKey)    rm.updateSlots(gpt_dict)
 
-    print("Slots beginning: ", rm.restaurant_slots)
+    print("Slots beginning: ", rm.slots)
     keys = rm.check_empty_slots()
     print("first empty Keys are: ", keys)
     
@@ -184,7 +184,7 @@ def find_info():
         currKey = keys[0]
         print('currKey: ', currKey)
 
-        if rm.restaurant_slots[currKey] is None: #double check...
+        if rm.slots[currKey] is None: #double check...
             #GPT requests slot from user
             slot_request =  rm.askForSlot(currKey)
             eel.updatechattext("ChatGPT: "+slot_request)
@@ -210,19 +210,19 @@ def find_info():
                 gpt_output = rm.sendSlotPrompt(curr_Utt)
                 print(f'New GPT Response after ValueError:\n{gpt_output}\n')
                 gpt_dict = rm.convert_stringtodict(gpt_output) #retry...
-                print("Slots after error: ", rm.restaurant_slots)
+                print("Slots after error: ", rm.slots)
                 #clar_request(currKey)
                 
         # update any slots found, and update the keys iterable
         rm.updateSlots(gpt_dict) 
         keys = rm.check_empty_slots()
-        print("Slots updated: ", rm.restaurant_slots)
+        print("Slots updated: ", rm.slots)
         print("Keys are: ", keys)
 
         # if the slot is still empty, request clarification from GPT
         while currKey in keys:
             clar_request(currKey)
-            print("Slots after looped clarification request: ", rm.restaurant_slots)
+            print("Slots after looped clarification request: ", rm.slots)
             keys = rm.check_empty_slots()
             print("Keys in loop are: ", keys)
     return 

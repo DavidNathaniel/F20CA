@@ -12,14 +12,14 @@ client = openai.OpenAI(api_key=openai_api_key)
 class SearchCreativeWorkManager(DM):
     def __init__(self):
         super().__init__()
-        self.creative_slots = {
+        self.slots = {
             "type": None,
             "name": None
         }
     
     #empty the slots
     def empty_slots(self):
-        self.creative_slots = {
+        self.slots = {
             "type": None,
             "name": None
         }
@@ -27,8 +27,8 @@ class SearchCreativeWorkManager(DM):
     def check_empty_slots(self):
         start_time = time.time()
         NoneList = []
-        for slot in self.creative_slots.keys():
-            if self.creative_slots[slot] in [None, 'None', 'hhmm']:
+        for slot in self.slots.keys():
+            if self.slots[slot] in [None, 'None', 'hhmm']:
                 NoneList.append(slot)
         end_time = time.time()
         time_difference = end_time - start_time
@@ -77,7 +77,7 @@ class SearchCreativeWorkManager(DM):
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "user", "content": """slots={"type": None,"name": None}"""+f"ask a question to find the {slot}. Be brief. QUESTION ONLY"}
+                {"role": "user", "content": """slots={"type": None,"name": None}"""+f"ask a question to find the {slot} of a creative work. Be brief. QUESTION ONLY"}
             ]
         )
         completion_time = time.time()
@@ -93,13 +93,13 @@ class SearchCreativeWorkManager(DM):
         return dict
     
     def updateSlots(self, gpt_slots):
-        #this needs to update the creative_slots with the correct values for the keys
+        #this needs to update the slots with the correct values for the keys
         #not sure how to extract the keys and values from the gpt output("slots") since it returns a string
         start_time = time.time()
-        for key in self.creative_slots:
+        for key in self.slots:
             if key not in gpt_slots.keys():
                 continue
             elif gpt_slots[key] is not None:
-                self.creative_slots[key] = gpt_slots[key]
+                self.slots[key] = gpt_slots[key]
         end_time = time.time()
         print(f"updateSlots took {end_time - start_time} seconds")

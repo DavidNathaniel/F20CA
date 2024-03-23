@@ -12,7 +12,7 @@ client = openai.OpenAI(api_key=openai_api_key)
 class RestaurantManager(DM):
     def __init__(self):
         super().__init__()
-        self.restaurant_slots = {
+        self.slots = {
             "Location": None,
             "Timeframe": None,
             "PartySize": None,
@@ -21,7 +21,7 @@ class RestaurantManager(DM):
     
     #empty the slots
     def empty_slots(self):
-        self.restaurant_slots = {
+        self.slots = {
             "Location": None,
             "Timeframe": None,
             "PartySize": None,
@@ -31,8 +31,8 @@ class RestaurantManager(DM):
     def check_empty_slots(self):
         start_time = time.time()
         NoneList = []
-        for slot in self.restaurant_slots.keys():
-            if self.restaurant_slots[slot] in [None, 'None', 'hhmm']:
+        for slot in self.slots.keys():
+            if self.slots[slot] in [None, 'None', 'hhmm']:
                 NoneList.append(slot)
         end_time = time.time()
         time_difference = end_time - start_time
@@ -105,20 +105,20 @@ class RestaurantManager(DM):
         return dict
      
     def updateSlots(self, gpt_slots):
-        #this needs to update the restaurant_slots with the correct values for the keys
+        #this needs to update the slots with the correct values for the keys
         #not sure how to extract the keys and values from the gpt output("slots") since it returns a string
         start_time = time.time()
-        for key in self.restaurant_slots:
+        for key in self.slots:
             if key not in gpt_slots.keys():
                 continue
             elif gpt_slots[key] is not None:
-                self.restaurant_slots[key] = gpt_slots[key]
+                self.slots[key] = gpt_slots[key]
         end_time = time.time()
         print(f"updateSlots took {end_time - start_time} seconds")
         
 
 '''
-restaurant_slots = {
+slots = {
     "Location": None,
     "Timeframe": None,
     "PartySize": None,
@@ -135,20 +135,20 @@ res = sendSlotPrompt("Location", "I would like to book a restaurant in Edinburgh
 #print(res)
 gpt_slots = convert_stringtodict(res)
 print("gpt slots\n",gpt_slots)
-restaurant_slots = updateSlots(gpt_slots, restaurant_slots)
+slots = updateSlots(gpt_slots, slots)
 print("Restaurant slots after update")
-print(restaurant_slots)
+print(slots)
 #print(res)
 #print(list(res))
 
 
 #Main loop 
-for slot in restaurant_slots.keys():
+for slot in slots.keys():
     if slot is None:
         #if the's still no slot after the response, send a clarification request
         #change user_input to be the input from asr
         slots = sendSlotPrompt(slot, user_input)
-        updateSlots(slots, restaurant_slots)
+        updateSlots(slots, slots)
         if slot is None:
             resp = askForSlot(slot)
         
