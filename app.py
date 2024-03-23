@@ -14,13 +14,17 @@ import wav_ASR
 #import TTS
 from restaurant_manager import RestaurantManager
 import time
+import openai
+from dotenv import load_dotenv
 import TTS_Module as tts_mod
 from ctypes import c_bool, c_wchar_p
 
 if __name__ == "__main__":
     eel.init('web')
     mp.set_start_method('spawn')
-    
+    load_dotenv("Retico_GPT/k.env")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    client = openai.OpenAI(api_key=openai_api_key)
     rm = RestaurantManager()
     global user_speaking_event
     user_speaking_event = mp.Event()
@@ -33,8 +37,19 @@ if __name__ == "__main__":
     # print("Speaking flag ", user_speaking_event.is_set())
 
 
+def identify_task(user_input):
+    #function for identifying the task using GPT
+    completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            #put in our dictionary so gpt doesn't forget stuff?
+            messages=[
+                {"role": "user", "content": f"Your job is to identify the task a user wants to carry out. The possible task are bookRestaurant, playMusic, getWeather, searchCreativeWorks,and rateBook. Find the task from this user response: '{user_input}'. RETURN TASK ONLY. If the user does not provide enough information, respond with notEnoughInfo"}
+            ]
+        )
+    task = completion.choices[0].message.content
+    return task
 
-# initiate a clarification request from GPT for the relevant slot.
+
 def clar_request(slot):
     global engine
     global mic_con
