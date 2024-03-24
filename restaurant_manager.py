@@ -99,9 +99,15 @@ class RestaurantManager(DM):
         print(f"askForSlot response took {response_time - completion_time} seconds")
         return response
 
-    @staticmethod
-    def convert_stringtodict(input_string):
-        dict = ast.literal_eval(input_string)
+
+    def convert_stringtodict(self, input_string):
+        try:
+            dict = ast.literal_eval(input_string)        
+        except ValueError: 
+            print("ValueError found... retrying...")
+            retry_text = self.sendSlotPrompt(input_string)
+            print(f'New GPT Response after ValueError:\n{retry_text}\n')
+            dict = ast.literal_eval(retry_text) #retry...
         return dict
      
     def updateSlots(self, gpt_slots):
