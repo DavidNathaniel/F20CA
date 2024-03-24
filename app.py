@@ -13,7 +13,9 @@ import pyttsx3
 import wav_ASR
 #import TTS
 from restaurant_manager import RestaurantManager
+import create_correct_class_for_task as ccc
 import time
+import os
 import openai
 from dotenv import load_dotenv
 import TTS_Module as tts_mod
@@ -41,7 +43,6 @@ def identify_task(user_input):
     #function for identifying the task using GPT
     completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            #put in our dictionary so gpt doesn't forget stuff?
             messages=[
                 {"role": "user", "content": f"Your job is to identify the task a user wants to carry out. The possible task are bookRestaurant, playMusic, getWeather, searchCreativeWorks,and rateBook. Find the task from this user response: '{user_input}'. RETURN TASK ONLY. If the user does not provide enough information, respond with notEnoughInfo"}
             ]
@@ -160,6 +161,15 @@ def find_info():
     curr_Utt = main_con.recv()
     eel.updatechattext("Speaker: " + curr_Utt)
     user_speaking_event.clear()
+    manager = ccc.create_class(identify_task(curr_Utt))
+    while manager is None:
+        print("Task not identified, please try again.")
+        eel.updatechattext("ChatGPT: Task not identified, please try again.")
+        setup_listen_process(mic_con, user_speaking_event)
+        setup_speak_process("Task not identified, please try again.")
+        curr_Utt = main_con.recv()
+        user_speaking_event.clear()
+        manager = ccc.create_class(identify_task(curr_Utt))
     #Send uterance to GPT, convert the response to our python dict, and update
     gpt_output = rm.sendSlotPrompt(curr_Utt)
         
