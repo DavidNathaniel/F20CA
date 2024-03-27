@@ -27,16 +27,13 @@ if __name__ == "__main__":
     load_dotenv("Retico_GPT/k.env")
     openai_api_key = os.getenv("OPENAI_API_KEY")
     client = openai.OpenAI(api_key=openai_api_key)
-    rm = RestaurantManager()
     global main_con, mic_con
     main_con, mic_con = mp.Pipe()
-
-
 
 def identify_task(user_input):
     #function for identifying the task using GPT
     completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",
             messages=[
                 {"role": "user", "content": f"Your job is to identify the task a user wants to carry out. The possible task are bookRestaurant, playMusic, getWeather, searchCreativeWorks,and rateBook. Find the task from this user response: '{user_input}'. RETURN TASK ONLY. If the user does not provide enough information, respond with notEnoughInfo"}
             ]
@@ -44,30 +41,28 @@ def identify_task(user_input):
     task = completion.choices[0].message.content
     return task
 
-
-
-def clar_request(slot):
+def clar_request(manager, slot):
     global mic_con
     global main_con
     #send request to GPT, then update the chat text and speak the response
-    ans = rm.sendClarification(slot) #
+    ans = manager.sendClarification(slot) #
     eel.updatechattext(ans) 
     setup_listen_process(mic_con)
     setup_speak_process(ans)
 
     curr_Utt = main_con.recv()
     # get the user's response, send to GPT, convert the gpt response to our python dict.
-    gpt_output = rm.sendSlotPrompt(curr_Utt)
+    gpt_output = manager.sendSlotPrompt(curr_Utt)
     
     print("GPT's response is: ", gpt_output)
     
-    rm.convert_stringtodict(gpt_output)
+    gpt_dict = manager.convert_stringtodict(gpt_output)
 
-    print("Current slots are: ", rm.slots)
+    print("Current slots are: ", manager.slots)
 
     #update the slots with the new information
-    rm.updateSlots(gpt_dict)
-    print("Updated slots are: ", rm.slots)
+    manager.updateSlots(gpt_dict)
+    print("Updated slots are: ", manager.slots)
 
 
 # Function to handle microphone input
@@ -89,7 +84,6 @@ def listen_for_user_input(con_to_main):
             con_to_main.send(curr_input)
             # Update the chat text with user input
             break
-
 
 def setup_speak_process(msg):
     global main_con
@@ -114,7 +108,7 @@ def speak(text):
 def append_to_chattext():
     global main_con
     global mic_con
-    start_text = "Can I help you book a restaurant? The fitness grand-pacer test is a multistage arobic test, that progressively gets more difficult as you continue."
+    start_text = "hello how can I help you today? I am currently able to help you by searching for a craetive work or booking a restaurant. Please feel free to interrupt me at any time."
     eel.updatechattext("ChatGPT: " + start_text)
     setup_listen_process(mic_con)
     setup_speak_process(start_text)
@@ -130,22 +124,24 @@ def find_info():
     print("starting wait")
     curr_Utt = main_con.recv()
     eel.updatechattext("Speaker: " + curr_Utt)
+    #print("Identified task: " + identify_task(curr_Utt))
     manager = ccc.create_class(identify_task(curr_Utt))
     while manager is None:
-        print("Task not identified, please try again.")
-        eel.updatechattext("ChatGPT: Task not identified, please try again.")
+        clar = "I'm sorry I am currently only able to help you by searching for a creative work or booking a restaurant. Please try again."
+        eel.updatechattext("ChatGPT:" + clar)
         setup_listen_process(mic_con)
-        setup_speak_process("Task not identified, please try again.")
+        setup_speak_process(clar)
         curr_Utt = main_con.recv()
         manager = ccc.create_class(identify_task(curr_Utt))
+        #print(identify_task(curr_Utt))
     #Send uterance to GPT, convert the response to our python dict, and update
-    gpt_output = rm.sendSlotPrompt(curr_Utt)
+    gpt_output = manager.sendSlotPrompt(curr_Utt)
+    print(f'GPT Response:\n{gpt_output}\n')
     
-    gpt_dict = rm.convert_stringtodict(gpt_output)
-   
+    gpt_dict = manager.convert_stringtodict(gpt_output)
 
-    print("Slots beginning: ", rm.slots)
-    keys = rm.check_empty_slots()
+    print("Slots beginning: ", manager.slots)
+    keys = manager.check_empty_slots()
     print("first empty Keys are: ", keys)
     
     # loop through all keys with a None value, and request each.
@@ -154,38 +150,37 @@ def find_info():
         currKey = keys[0]
         print('currKey: ', currKey)
 
-        if rm.slots[currKey] is None: #double check...
+        if manager.slots[currKey] is None: #double check...
             #GPT requests slot from user
-            slot_request =  rm.askForSlot(currKey)
+            slot_request =  manager.askForSlot(currKey)
             eel.updatechattext("ChatGPT: "+slot_request)
             setup_listen_process(mic_con)
             setup_speak_process(slot_request)
             curr_Utt = main_con.recv()
 
-            gpt_output = rm.sendSlotPrompt(curr_Utt)
+            gpt_output = manager.sendSlotPrompt(curr_Utt)
             print(f'GPT Response:\n{gpt_output}\n')
 
             # Sometimes GPT produces a dict / JSON that doesn't fit with our expected format.
             # In this instance a ValueError is raised, 
             # so we try to get a new response from GPT with the same prompt
             # Sending a clarification request is another potential fix here, depends on requirements
-            gpt_dict = rm.convert_stringtodict(gpt_output)
-   
+            gpt_dict = manager.convert_stringtodict(gpt_output)
 
         # update any slots found, and update the keys iterable
-        rm.updateSlots(gpt_dict) 
-        keys = rm.check_empty_slots()
-        print("Slots updated: ", rm.slots)
+        manager.updateSlots(gpt_dict) 
+        keys = manager.check_empty_slots()
+        print("Slots updated: ", manager.slots)
         print("Keys are: ", keys)
 
         # if the slot is still empty, request clarification from GPT
         while currKey in keys:
-            clar_request(currKey)
-            print("Slots after looped clarification request: ", rm.slots)
-            keys = rm.check_empty_slots()
+            clar_request(manager, currKey)
+            print("Slots after looped clarification request: ", manager.slots)
+            keys = manager.check_empty_slots()
             print("Keys in loop are: ", keys)
     return 
-   
+
     #this resets the conversation once it is finished. 
     #Alternative is to rest when user presses speak button
     # rm.empty_slots()# = RestaurantManager()

@@ -43,7 +43,7 @@ class SearchCreativeWorkManager(DM):
             model="gpt-3.5-turbo",
             #put in our dictionary so gpt doesn't forget stuff?
             messages=[
-                {"role": "user", "content": """{"type": None,"name": None}"""+f"You are a dialogue manager for searching creative works, please find the relevant slot and potentially other slots from this user response: '{user_response}' this response might not be semantically correct. FORMATTED PYTHON DICT ONLY."}
+                {"role": "user", "content": """{"type": None,"name": None}"""+f"You are a dialogue manager for searching creative works, please find the relevant slots from this user response: '{user_response}' this response might not be semantically correct. FORMATTED PYTHON DICT ONLY."}
             ]
         )
         completion_time = time.time()
@@ -87,9 +87,14 @@ class SearchCreativeWorkManager(DM):
         print(f"askForSlot response took {response_time - completion_time} seconds")
         return response
 
-    @staticmethod
-    def convert_stringtodict(input_string):
-        dict = ast.literal_eval(input_string)
+    def convert_stringtodict(self,input_string):
+        try:
+            dict = ast.literal_eval(input_string)        
+        except ValueError: 
+            print("ValueError found... retrying...")
+            retry_text = self.sendSlotPrompt(input_string)
+            print(f'New GPT Response after ValueError:\n{retry_text}\n')
+            dict = ast.literal_eval(retry_text) #retry...
         return dict
     
     def updateSlots(self, gpt_slots):

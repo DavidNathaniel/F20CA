@@ -47,7 +47,7 @@ class RestaurantManager(DM):
             model="gpt-3.5-turbo",
             #put in our dictionary so gpt doesn't forget stuff?
             messages=[
-                {"role": "user", "content": """{"Location": None,"Timeframe": None,"PartySize": None,"Cuisine": None}"""+f"You are a dialogue manager, please find the relevant slot and potentially other slots from this user response: '{user_response}' this response might not be semantically correct. FORMATTED PYTHON DICT ONLY.Use hhmm time."}
+                {"role": "user", "content": """{"Location": None,"Timeframe": None,"PartySize": None,"Cuisine": None}"""+f"You are a dialogue manager, please find the relevant slot and potentially other slots from this user response: '{user_response}' this response might not be semantically correct. FORMATTED PYTHON DICT ONLY.USE 24hr TIME. DO NOT USE IN AS A TOKEN FOR LOCATON"}
             ]
         )
         completion_time = time.time()
@@ -109,7 +109,7 @@ class RestaurantManager(DM):
             print(f'New GPT Response after ValueError:\n{retry_text}\n')
             dict = ast.literal_eval(retry_text) #retry...
         return dict
-     
+    
     def updateSlots(self, gpt_slots):
         #this needs to update the slots with the correct values for the keys
         #not sure how to extract the keys and values from the gpt output("slots") since it returns a string
