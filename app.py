@@ -1,25 +1,18 @@
 # author:nerako, David, Nedas, Gregor
 # For the main screen and UI, run this function directly.
 # -----------------------2024.03.14-------------------------
-
-import eel
-import record_wav
-import microphone_ASR
-import multiprocessing as mp
-import keyboard
-import pyttsx3
-#import TTS_Module as tm
-#import threading
-import wav_ASR
-#import TTS
-from restaurant_manager import RestaurantManager
-import create_correct_class_for_task as ccc
-import time
 import os
 import openai
 from dotenv import load_dotenv
+import numpy as np
+import pyaudio
+import eel
+
+import microphone_ASR
 import TTS_Module as tts_mod
-from ctypes import c_bool, c_wchar_p
+import multiprocessing as mp
+
+import create_correct_class_for_task as ccc
 
 if __name__ == "__main__":
     eel.init('web')
@@ -46,7 +39,7 @@ def clar_request(manager, slot):
     global main_con
     #send request to GPT, then update the chat text and speak the response
     ans = manager.sendClarification(slot) #
-    eel.updatechattext(ans) 
+    eel.updatechattext("ChatGPT: " + ans) 
     setup_listen_process(mic_con)
     setup_speak_process(ans)
 
@@ -80,22 +73,29 @@ def listen_for_user_input(con_to_main):
         if curr_input:
             # If there is speech input, set the speaking flag to True
             print("User input: ", curr_input)
-            
             con_to_main.send(curr_input)
             # Update the chat text with user input
             break
 
 def setup_speak_process(msg):
-    global main_con
     p = mp.Process(target=speak, args=( msg,), daemon=True)
     p.start()
-    print(p.name)
-    while p.is_alive():
-        if main_con.poll(): 
-            print("User is speaking, terminating: " + p.name)
-            p.terminate()
-        else:
-            continue
+    mic = pyaudio.PyAudio()
+    stream = mic.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True, frames_per_buffer=1024)
+    try:
+        while p.is_alive():
+            data = np.fromstring(stream.read(1024), dtype=np.int16)
+            volume = np.max(np.abs(data))
+            if volume >= 1500:
+                print("Interrupt!")
+                p.terminate()
+                break
+    except (KeyboardInterrupt, SystemExit):
+        print("Interrupted by user.")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        mic.terminate()
 
 # TTS speaker function (for multi-threading)
 def speak(text):
